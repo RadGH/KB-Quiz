@@ -1,0 +1,14 @@
+.next-steps-container{
+	text-align: center;
+	color: white;
+	background: #11113c;
+	padding: 50px;
+	padding-top: 30px;
+	width: 100vw;
+	position: relative;
+	left: calc(-50vw + 50%);
+	margin: 40px 0;
+}
+.next-steps-container h2{
+	color:white;
+}
