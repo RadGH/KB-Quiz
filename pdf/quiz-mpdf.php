@@ -29,57 +29,27 @@ class KB_Quiz_PDF {
 		$defaultFontConfig = (new Mpdf\Config\FontVariables())->getDefaults();
 		$fontData = $defaultFontConfig['fontdata'];
 		
-		$font_path = get_stylesheet_directory() . '/_includes/functions/quiz/assets/';
+		$path = __DIR__;
 		
-		$pdf = new \Mpdf\Mpdf([
-			'fontDir' => array_merge($fontDirs, [ $font_path ]),
+		$pdf = new \Mpdf\Mpdf(array(
+			'fontDir' => array_merge($fontDirs, array($path)),
 			'fontdata' => $fontData +
-				[
-					'angerthas' => [
-						'R' => 'angerthas.ttf',
-					],
-					'inkfree' => [
-						'R' => 'Inkfree.ttf',
-					],
-				],
-		]);
-		
-		/*
-		$defaultConfig = (new Mpdf\Config\ConfigVariables())->getDefaults();
-		$defaultFontConfig = (new Mpdf\Config\FontVariables())->getDefaults();
-		
-		$fontDirs = (array) $defaultConfig['fontDir'];
-		$fontData = (array) $defaultFontConfig['fontdata'];
-		
-		$font_path = get_stylesheet_directory() . '/_includes/functions/quiz/pdf/fonts/';
-		
-		$fonts = array(
-			'lato' => array(
-				'R' => 'lato-regular.ttf',
-				'I' => 'lato-italic.ttf',
-				'B' => 'lato-bold.ttf',
-				'BI' => 'lato-bold-italic.ttf',
-			),
-			'juana' => array(
-				'R' => 'juana-regular.ttf',
-				'i' => 'juana-italic.ttf',
-			),
-			'silversouthscript' => array(
-				'R' => 'silver-south-script.ttf',
-			),
-		);
-		
-		$args = array(
-			'tempDir' => __DIR__ . '/tmp/',
-			'fontDir' => array_merge( $fontDirs, array( $font_path ) ),
-			'fontdata' => array_merge( $fontData, $fonts ),
-			// 'default_font' => 'lato',
-		);
-		
-		// $args dump: https://radleysustaire.com/s3/81aa73/
-		
-		$pdf = new Mpdf\Mpdf( $args );
-		*/
+				array(
+					'lato' => array(
+						'R' => 'fonts/lato-regular.ttf',
+						'I' => 'fonts/lato-italic.ttf',
+						'B' => 'fonts/lato-bold.ttf',
+						'BI' => 'fonts/lato-bold-italic.ttf',
+					),
+					'juana' => array(
+						'R' => 'fonts/juana-regular.ttf',
+						'i' => 'fonts/juana-italic.ttf',
+					),
+					'silversouthscript' => array(
+						'R' => 'fonts/silver-south-script.ttf',
+					),
+				),
+		));
 		
 		return $pdf;
 	}
@@ -103,6 +73,10 @@ class KB_Quiz_PDF {
 			exit;
 		}
 		
+		// Clear output buffer
+		// IDK why but we need this or else the pdf gives an error
+		ob_end_clean();
+		
 		// Do not put PDF on Google
 		header( "X-Robots-Tag: noindex, nofollow" );
 		
@@ -117,48 +91,62 @@ class KB_Quiz_PDF {
 		// Create PDF
 		$pdf = $this->create_pdf();
 		
-		/*
-		// works!
-		$pdf->WriteHTML( '<span style="font-family: dejavuserif;">Your coaching competence shows in how SERIF</span>' );
-		$pdf->WriteHTML( '<span style="font-family: dejavusans;">Your coaching competence shows in how SANS</span>' );
-		// $pdf->WriteHTML( '<span style="font-family: silversouthscript;">Your coaching competence shows in how SANS</span>' );
-		
-		$pdf->SetFont( 'dejavuserif', 'R' );
-		$pdf->WriteHTML( 'Your coaching competence shows in how SERIF 2' );
-		
-		$pdf->SetFont( 'dejavusans', 'R' );
-		$pdf->WriteHTML( 'Your coaching competence shows in how SANS 2' );
-		/**/
-		
-		
-		$pdf->WriteHtml('<html>
-    <head>
-		<style>
-		.inkfree {
-			font-family: "Ink Free";
-		}
-		</style>
-    </head>
-    <body>
-<h1>Using custom font in the document</h1>
-
-<p style=\'font-family: angerthas\'>This example shows how to keep default font families while adding a custom font directory and definitions.</p>
-
-<p style="font-family: \'Ink Free\'">Inkfree line of text</p>
-
-<p style="font-family: "Ink Free";">Inkfree line of text that is not working</p>
-
-<p style=\'font-family: "Ink Free"\'>Inkfree line of text that is not working</p>
-
-<p class="inkfree">Inkfree line of text</p>
-
-</body>
-</html>');
-		/**/
+		// Font test page
+		$this->add_test_fonts_page( $pdf );
 		
 		$pdf->Output();
 		
 		exit;
+	}
+	
+	public function add_test_fonts_page( $pdf ) {
+		ob_start();
+		?>
+		<html>
+		<head>
+			<style>
+				.lato {
+					font-family: "lato";
+				}
+				.juana {
+					font-family: "Juana";
+				}
+				.silversouthscript {
+					font-family: "Silversouthscript";
+				}
+			</style>
+		</head>
+		<body>
+		<h1>Using custom font in the document</h1>
+		<p>version 1.0</p>
+		
+		<p>Example - Default text</p>
+		<p style="font-family: Lato">Example - Lato</p>
+		<p style="font-family: Lato, sans-serif">Example - Lato, sans-serif</p>
+		<p style="font-family: 'Lato'">Example - 'Lato'</p>
+		<p class="lato">Example - class="lato"</p>
+		
+		<p style='font-family: "Lato"'>Example - "Lato" (Double quotes do not work for some reason)</p>
+		
+		<hr>
+		
+		<p style="font-family: Lato;">Lato Regular</p>
+		<p style="font-family: Lato;"><strong>Lato Bold</strong></p>
+		<p style="font-family: Lato;"><em>Lato Italic</em></p>
+		<p style="font-family: Lato;"><strong><em>Lato Bold Italic</em></strong></p>
+		
+		<hr>
+		
+		<p style="font-family: juana;">Juana Regular</p>
+		<p style="font-family: juana;"><em>Juana Italic</em></p>
+		<p style="font-family: silversouthscript;">Silversouthscript</p>
+		
+		</body>
+		</html>
+		<?php
+		$html = ob_get_clean();
+		
+		$pdf->WriteHtml($html);
 	}
 	
 }
