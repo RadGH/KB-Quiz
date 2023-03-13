@@ -1,0 +1,70 @@
+/*
+w: 792.00mm
+h: 612.00mm
+
+width: 1055px;
+height: 815px;
+margin-left: 56px;
+margin-right: 56px;
+*/
+
+@font-face {
+	font-family: 'juana';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/juana_regular-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'juana';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/juana_regular_it-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'lato';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/Lato-Regular.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'lato';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/Lato-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'lato';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/Lato-Italic.woff2') format('woff2');
+	font-weight: normal;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'lato';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/Lato-BoldItalic.woff2') format('woff2');
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'silversouthscript';
+	src: url('/wp-content/themes/northstar-child/_includes/quiz/pdf/fonts/silver_south_script-webfont.woff2') format('woff2');
+	font-weight: 700;
+	font-style: italic;
+}
+
+body {
+	background: #333;
+	padding-top: 30px;
+}
+
+pagebreak {
+	width: 1055px;
+	height: 815px;
+	display: block;
+	margin: 0 auto;
+}

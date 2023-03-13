@@ -25,9 +25,16 @@ class KB_Quiz {
 	
 	public $key_id = 31; // secret key field ID
 	
+	public $first_name_id = 27;
+	public $last_name_id = 28;
+	public $email_id = 29;
+	
 	public $confirmation = null;
 	
 	public function __construct() {
+		
+		require_once( __DIR__ . '/pdf/quiz-mpdf.php' ); // Adds the PDF functionality to the quiz
+		require_once( __DIR__ . '/pdf/pdf-preview.php' ); // Adds an optional preview mode by adding ?previewpdf to a pdf url
 		
 		// Enqueue quiz css
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
@@ -328,6 +335,25 @@ class KB_Quiz {
 		$entries = GFAPI::get_entries( $this->form_id, $search );
 		
 		return $entries ? $entries[0] : false;
+	}
+	
+	/**
+	 * Get a value from a field in an entry by custom named key
+	 *
+	 * @param $key
+	 *
+	 * @return mixed
+	 */
+	public function get_entry_value( $entry, $key ) {
+		$field_id = null;
+		
+		switch( $key ) {
+			case 'first_name': $field_id = $this->first_name_id; break;
+			case 'last_name': $field_id = $this->last_name_id; break;
+			case 'email': $field_id = $this->email_id; break;
+		}
+		
+		return rgar( $entry, $field_id );
 	}
 	
 	/**
