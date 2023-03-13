@@ -38,6 +38,10 @@ class KB_Quiz_PDF {
 	public $feedback = false;
 	public $next_step = false;
 	
+	// mPDF Settings
+	public $document_title = false;
+	public $filename = false;
+	
 	
 	public function __construct() {
 		
@@ -98,7 +102,15 @@ class KB_Quiz_PDF {
 		$this->feedback = $this->get_pdf_setting( 'feedback' );
 		$this->next_step = $this->get_pdf_setting( 'next_step' );
 		
+		// Copyright can use [year]
 		$this->copyright = str_replace( '[year]', date('Y'), $this->copyright );
+		
+		// mPDF settings
+		$this->document_title = wp_strip_all_tags( $this->title );
+		$this->filename = esc_attr(wp_strip_all_tags( $this->first_name . ' ' . $this->last_name . ' - ' . $this->title ) . '.pdf');
+		
+		// Set document title
+		$this->pdf->SetTitle( $this->document_title );
 		
 		// Add CSS from pdf.css
 		$this->add_stylesheet();
@@ -222,7 +234,7 @@ class KB_Quiz_PDF {
 		header( "Cache-Control: post-check=0, pre-check=0", false );
 		
 		// Send PDF to browser
-		$this->pdf->Output();
+		$this->pdf->Output( $this->filename, 'I' );
 		exit;
 		
 	}
@@ -297,7 +309,7 @@ class KB_Quiz_PDF {
 	</div>
 	
 	<div class="copyright right dark"><?php
-		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+		echo $this->document_title . '<br>' . $this->copyright;
 	?></div>
 	
 	<div class="logo chart-logo left light">
@@ -326,7 +338,7 @@ class KB_Quiz_PDF {
 	</div>
 	
 	<div class="copyright left light"><?php
-		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+		echo $this->document_title . '<br>' . $this->copyright;
 	?></div>
 	
 	<div class="logo right light">
@@ -348,7 +360,7 @@ class KB_Quiz_PDF {
 		ob_start();
 		?>
 <pagebreak page-selector="nextstep">
-	<div class="photo" style="background-image: url(https://karenbenoy.com/wp-content/themes/northstar-child/_includes/functions/quiz/assets/karen-brody-min.jpg);">
+	<div class="photo" style="background-image: url(https://karenbenoy.com/wp-content/themes/northstar-child/_includes/functions/quiz/assets/kbrody-min.jpg);">
 	</div>
 	
 	<div class="page page-next-step footer-sloped">
@@ -358,7 +370,7 @@ class KB_Quiz_PDF {
 	</div>
 	
 	<div class="copyright left light"><?php
-		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+		echo $this->document_title . '<br>' . $this->copyright;
 	?></div>
 	
 	<div class="logo right light">

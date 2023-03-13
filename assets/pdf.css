@@ -202,6 +202,8 @@ next step
 	bottom: 0;
 	width: 45%;
 	height: 100%;
-	background: #11113c center no-repeat;
-	background-size: cover;
+	background: #11113c right no-repeat;
+	background-size: 105%;
+
+	background-image-size: 4;
 }

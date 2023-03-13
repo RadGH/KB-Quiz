@@ -8,6 +8,9 @@ class KB_PDF_Preview {
 	public function construct() {
 	}
 	
+	public function SetTitle( $title ) {
+	}
+	
 	public function WriteHTML( $string, $ignore_dom = 0 ) {
 		if ( $ignore_dom === 0 ) {
 			$this->content .= "\n\n" . $string;
