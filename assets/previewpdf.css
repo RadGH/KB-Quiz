@@ -66,5 +66,8 @@ pagebreak {
 	width: 1055px;
 	height: 815px;
 	display: block;
-	margin: 0 auto;
+	margin: 0 auto 40px;
+	box-shadow: 0 5px 20px #000;
+	background: #fff;
+	overflow: hidden;
 }

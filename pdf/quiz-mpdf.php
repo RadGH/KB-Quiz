@@ -16,6 +16,29 @@ class KB_Quiz_PDF {
 	/** @var array $form */
 	public $form = null;
 	
+	// Other settings
+	public $prefix = false;
+	public $chart_src = false;
+	
+	// Result settings
+	public $result_title = false;
+	public $result_intro = false;
+	public $result_next_steps = false;
+	public $result_detailed_results = false;
+	
+	// Entry fields
+	public $first_name = false;
+	public $last_name = false;
+	public $email = false;
+	
+	// PDF Settings
+	public $title = false;
+	public $subtitle = false;
+	public $copyright = false;
+	public $feedback = false;
+	public $next_step = false;
+	
+	
 	public function __construct() {
 		
 		// PDF generation is done using mpdf
@@ -53,19 +76,56 @@ class KB_Quiz_PDF {
 		$this->form = $form;
 		$this->pdf = $this->create_pdf();
 		
+		// Calculate results
+		$this->chart_src = $KB_Quiz->get_chart_image_src( $entry['id'] );
+		$this->prefix = $KB_Quiz->get_settings_prefix( $entry );
+		
+		// Get settings based on results
+		$this->result_title = get_field( "{$this->prefix}_form_confirmation_title", 'kb_quiz' );
+		$this->result_intro = get_field( "{$this->prefix}_form_confirmation_intro", 'kb_quiz', false );
+		$this->result_next_steps = get_field( "{$this->prefix}_form_confirmation_next_steps", 'kb_quiz', false );
+		$this->result_detailed_results = get_field( "{$this->prefix}_form_confirmation_detailed_results", 'kb_quiz', false );
+		
+		// Get entry fields
+		$this->first_name = $this->get_entry_value( 'first_name' );
+		$this->last_name = $this->get_entry_value( 'last_name' );
+		$this->email = $this->get_entry_value( 'email' );
+		
+		// Get pdf custom fields
+		$this->title = $this->get_pdf_setting( 'title' );
+		$this->subtitle = $this->get_pdf_setting( 'subtitle' );
+		$this->copyright = $this->get_pdf_setting( 'copyright' );
+		$this->feedback = $this->get_pdf_setting( 'feedback' );
+		$this->next_step = $this->get_pdf_setting( 'next_step' );
+		
+		$this->copyright = str_replace( '[year]', date('Y'), $this->copyright );
+		
 		// Add CSS from pdf.css
 		$this->add_stylesheet();
 		
 		// Page: Intro
 		$this->add_intro_page();
 		
+		// Page: Chart
+		$this->add_chart_page();
+		
+		// Page: Feedback
+		$this->add_feedback_page();
+		
+		// Page: Next Step
+		$this->add_next_step_page();
+		
 		// Page: Font test page
-		$this->add_test_fonts_page();
+		// $this->add_test_fonts_page();
 		
 		// Finish
 		$this->send_pdf();
 		
 		exit;
+	}
+	
+	public function get_pdf_setting( $name ) {
+		return get_field( "pdf_content_{$name}", 'kb_quiz' );
 	}
 	
 	/**
@@ -181,7 +241,7 @@ class KB_Quiz_PDF {
 	 * @return void
 	 */
 	public function add_intro_page() {
-		$full_name = trim( $this->get_entry_value( 'first_name' ) . ' ' . $this->get_entry_value( 'last_name' ) );
+		$full_name = trim( $this->first_name . ' ' . $this->last_name );
 		
 		ob_start();
 		?>
@@ -189,21 +249,120 @@ class KB_Quiz_PDF {
 	<div class="page page-intro">
 		<div class="page-inner">
 			<div class="intro-title">
-				<h1>What is Your Coaching Style? <em>Quiz</em></h1>
-				<h2>Here's How to Be a Transformational Leadership Coach</h2>
+				<h1><?php echo $this->title; ?></h1>
+				<h2><?php echo $this->subtitle; ?></h2>
 			</div>
 			
 			<div class="report-for">
-				<p>Report for: <?php echo $full_name; ?></p>
+				<p>Report for: <?php echo esc_html($full_name); ?></p>
 				<p>Date: <?php echo current_time('m/d/Y'); ?></p>
 			</div>
 		</div>
 	</div>
 	
-	<div class="copyright left">&copy; 2023 Karen Benoy Coaching. All Rights Reserved.</div>
+	<div class="copyright raised left dark"><?php echo $this->copyright; ?></div>
 	
-	<div class="logo right">
+	<div class="logo raised right dark">
 		<img src="https://karenbenoy.com/wp-content/uploads/2022/05/karen-benoy-logo-full-color-rgb.svg" alt="Karen Brody Logo">
+	</div>
+</pagebreak>
+		<?php
+		$html = ob_get_clean();
+		
+		$this->pdf->WriteHTML($html);
+	}
+	
+	/*
+	 * 2nd page of the PDF
+	 *
+	 * @return void
+	 */
+	public function add_chart_page() {
+		ob_start();
+		?>
+<pagebreak page-selector="chart">
+	<div class="page page-chart">
+		<div class="page-inner">
+		</div>
+	</div>
+	
+	<div class="chart-left">
+		<h2><?php echo $this->subtitle; ?></h2>
+		<?php echo wpautop($this->result_intro); ?>
+	</div>
+	
+	<div class="chart-right">
+		<h2><?php echo $this->result_title; ?></h2>
+		<img src="<?php echo esc_attr($this->chart_src); ?>" alt="scores chart svg">
+	</div>
+	
+	<div class="copyright right dark"><?php
+		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+	?></div>
+	
+	<div class="logo chart-logo left light">
+		<img src="https://karenbenoy.com/wp-content/uploads/2022/05/karen-benoy-logo-reverse-rgb.svg" alt="Karen Brody Logo">
+	</div>
+</pagebreak>
+		<?php
+		$html = ob_get_clean();
+		
+		$this->pdf->WriteHTML($html);
+	}
+	
+	/*
+	 * 3rd page of the PDF
+	 *
+	 * @return void
+	 */
+	public function add_feedback_page() {
+		ob_start();
+		?>
+<pagebreak page-selector="feedback">
+	<div class="page page-feedback footer-sloped">
+		<div class="page-inner">
+			<?php echo wpautop($this->feedback); ?>
+		</div>
+	</div>
+	
+	<div class="copyright left light"><?php
+		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+	?></div>
+	
+	<div class="logo right light">
+		<img src="https://karenbenoy.com/wp-content/uploads/2022/05/karen-benoy-logo-reverse-rgb.svg" alt="Karen Brody Logo">
+	</div>
+</pagebreak>
+		<?php
+		$html = ob_get_clean();
+		
+		$this->pdf->WriteHTML($html);
+	}
+	
+	/*
+	 * 4th page of the PDF
+	 *
+	 * @return void
+	 */
+	public function add_next_step_page() {
+		ob_start();
+		?>
+<pagebreak page-selector="nextstep">
+	<div class="photo" style="background-image: url(https://karenbenoy.com/wp-content/themes/northstar-child/_includes/functions/quiz/assets/karen-brody-min.jpg);">
+	</div>
+	
+	<div class="page page-next-step footer-sloped">
+		<div class="page-inner">
+			<?php echo wpautop($this->next_step); ?>
+		</div>
+	</div>
+	
+	<div class="copyright left light"><?php
+		echo wp_strip_all_tags($this->title) . '<br>' . $this->copyright;
+	?></div>
+	
+	<div class="logo right light">
+		<img src="https://karenbenoy.com/wp-content/uploads/2022/05/karen-benoy-logo-reverse-rgb.svg" alt="Karen Brody Logo">
 	</div>
 </pagebreak>
 		<?php

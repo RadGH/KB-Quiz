@@ -4,8 +4,10 @@ h: 612.00mm
 
 width: 1055px;
 height: 815px;
-margin-left: 56px;
-margin-right: 56px;
+margin-left: 30px or 50px;
+margin-right: 30px or 50px;
+30px = 2.84%
+50px = 4.74%
 */
 
 html,body {
@@ -14,10 +16,11 @@ html,body {
 	line-height: 1.5em;
 }
 
-h1,h2,h3,h4,h5,h6 {
+h1, h2, h3, h4, h5, h6 {
 	font-family: 'juana';
 	line-height: 1.35em;
-	margin: 0 0 10px;
+	margin: 0;
+	padding-bottom: 10px;
 }
 
 h1 em, h2 em, h3 em, h4 em, h5 em, h6 em {
@@ -26,15 +29,22 @@ h1 em, h2 em, h3 em, h4 em, h5 em, h6 em {
 
 h1 {
 	font-size: 52px;
-	margin: 0 0 30px;
+	padding-bottom: 30px;
 }
 
 h2 {
 	font-size: 34px;
+	padding-bottom: 20px;
 }
 
 p {
-	margin: 0 0 10px;
+	display: block;
+	margin: 0;
+	padding: 0 0 20px;
+}
+
+a {
+	color: #000000;
 }
 
 @page {
@@ -49,13 +59,13 @@ p {
 
 pagebreak {
 	position: relative;
+	background: #fff;
 }
 
 .page {
 	position: relative;
 	width: 100%;
 	height: 100%;
-	background: #fff;
 }
 
 /*
@@ -63,10 +73,20 @@ pagebreak {
 reusable
 
 */
+.logo {
+	z-index: 3;
+}
+
+.logo.left {
+	position: absolute;
+	bottom: 20px;
+	left: 50px;
+}
 .logo.right {
 	position: absolute;
+	bottom: 20px;
 	right: 50px;
-	bottom: 30px;
+	text-align: right;
 }
 
 .logo img {
@@ -76,12 +96,35 @@ reusable
 
 .copyright.left {
 	position: absolute;
-	bottom: 30px;
+	bottom: 20px;
 	left: 50px;
+}
+
+.copyright.right {
+	position: absolute;
+	bottom: 20px;
+	right: 50px;
+	text-align: right;
+}
+
+.logo.chart-logo.left {
+	left: 0%;
+	width: 45%;
+	text-align: center;
 }
 
 .copyright {
 	margin-bottom: 22px;
+	z-index: 3;
+}
+
+.copyright.light {
+	color: #fff;
+}
+
+.raised.copyright,
+.raised.logo {
+	bottom: 50px;
 }
 
 /*
@@ -90,8 +133,13 @@ reusable
 
 */
 
+.page.footer-sloped {
+	background: url(/wp-content/themes/northstar-child/_includes/functions/quiz/assets/slope-footer.png) top left no-repeat;
+	background-size: 100% 100%;
+	z-index: 2;
+}
 .page-intro {
-	background: #ffffff url(/wp-content/themes/northstar-child/_includes/functions/quiz/assets/slope-main.png) top left no-repeat;
+	background: url(/wp-content/themes/northstar-child/_includes/functions/quiz/assets/slope-main.png) top left no-repeat;
 	background-size: 100% 100%;
 }
 
@@ -103,4 +151,57 @@ reusable
 .page-intro .report-for {
 	margin-top: 120px;
 	font-size: 22px;
+}
+
+/*
+
+chart
+
+*/
+.chart-left,
+.chart-right {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+}
+
+.chart-left {
+	left: 0;
+	width: 39%;
+	padding: 70px 3%;
+	background: #11113c;
+	color: #ffffff;
+}
+
+.chart-right {
+	right: 0;
+	width: 49%;
+	padding: 70px 3%;
+	background: #ffffff;
+	text-align: center;
+}
+
+/*
+feedback
+*/
+.page-feedback .page-inner {
+	padding: 80px 50px;
+}
+
+/*
+next step
+*/
+.page-next-step .page-inner {
+	padding: 80px 50px 80px 50%;
+}
+.photo {
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 45%;
+	height: 100%;
+	background: #11113c center no-repeat;
+	background-size: cover;
 }
