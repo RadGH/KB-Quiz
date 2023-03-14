@@ -30,6 +30,7 @@ class KB_Quiz {
 	public $email_id = 29;
 	
 	public $confirmation = null;
+	public $temp_pdf_path = '';
 	
 	public function __construct() {
 		
@@ -51,6 +52,15 @@ class KB_Quiz {
 		// Allows shortcodes in gravity form confirmations
 		add_filter( 'gform_confirmation', array( $this, 'gf_allow_shortcodes_in_confirmation' ), 80, 4 );
 		
+		// Allow shortcodes in gravity form notifications
+		add_filter( 'gform_pre_send_email', array( $this, 'gf_allow_shortcodes_in_notification' ), 20, 4 );
+		
+		// Attach PDF to email
+		add_filter( 'gform_pre_send_email', array( $this, 'gf_attach_pdf_to_email' ), 20, 4 );
+		
+		// Clean up PDF after email is sent
+		add_action( '', array( $this, 'gf_clean_up_pdf' ), 20, 2 );
+		
 		// When an entry is created, save a unique identifier to its metadata
 		add_action( 'gform_entry_created', array( $this, 'gf_generate_entry_unique_key' ), 5, 2 );
 		
@@ -59,6 +69,12 @@ class KB_Quiz {
 		// https://karenbenoy.com/?kb_radar&scores=0.5,0.25,0.75,1.0,0.25,0.5,0.75,0.5,1.0,0.75
 		if ( isset($_GET['kb_radar']) ) {
 			add_action( 'init', array( $this, 'kb_radar' ) );
+		}
+		
+		// View past results by secret url
+		// @see https://karenbenoy.com/quiz/?kb_entry=6410d5ee5a372
+		if ( isset($_GET['kb_entry']) ) {
+			add_action( 'gform_pre_render', array( $this, 'display_previous_entry' ), 50, 1 );
 		}
 		
 		// For testing, allow viewing the results of a previous entry.
@@ -146,6 +162,7 @@ class KB_Quiz {
 		$atts = shortcode_atts(array(
 			'entry_id' => null,
 			'quiz_grade' => null,
+			'format' => null,
 		), $atts, $shortcode_name);
 		
 		$entry_id = $atts['entry_id'];
@@ -155,11 +172,11 @@ class KB_Quiz {
 		$form = GFAPI::get_form( $entry['form_id'] );
 		if ( $form['id'] != $this->form_id ) return '(Coaching style quiz error: Mismatched form id in '. $shortcode_name .')';
 		
-		
+		$format = $atts['format'];
 		
 		require_once( __DIR__ . '/templates/results.php' );
 		
-		$html = kb_generate_quiz_results_html( $entry, $form );
+		$html = kb_generate_quiz_results_html( $entry, $form, $format );
 		
 		return $html;
 	}
@@ -241,9 +258,98 @@ class KB_Quiz {
 	public function gf_allow_shortcodes_in_confirmation( $confirmation, $form, $entry, $ajax ) {
 		if ( $form['id'] != $this->form_id ) return $confirmation;
 		
-		$html = $this->expand_shortcode_and_merge_tags( $confirmation, $form, $entry );
+		return $this->expand_shortcode_and_merge_tags( $confirmation, $form, $entry );
+	}
+	
+	/**
+	 * Allow shortcodes in gravity form notifications
+	 *
+	 * @param array $email
+	 * @param string $message_format
+	 * @param array $notification
+	 * @param array $entry
+	 *
+	 * @return array
+	 */
+	public function gf_allow_shortcodes_in_notification( $email, $message_format, $notification, $entry ) {
+		if ( $entry['form_id'] != $this->form_id ) return $email;
 		
-		return $html;
+		$email['subject'] = do_shortcode( $email['subject'] );
+		
+		return $email;
+	}
+	
+	/**
+	 * Downloads a file to the uploads folder /quizzes/ directory with a given filename
+	 *
+	 * @param $url
+	 * @param $filename
+	 *
+	 * @return string
+	 */
+	public function download_file_as_path( $url, $filename, $form_id ) {
+		$contents = file_get_contents( $url );
+		
+		$uploads = wp_upload_dir();
+		$upload_path = untrailingslashit( $uploads['basedir'] ) . '/quiz-tmp/';
+		if ( !file_exists( $upload_path ) ) mkdir( $upload_path );
+		
+		$path = $upload_path . $filename;
+		
+		file_put_contents( $path, $contents );
+		
+		return $path;
+	}
+	
+	/**
+	 * Attach PDF to email
+	 *
+	 * @param array $email
+	 * @param string $message_format
+	 * @param array $notification
+	 * @param array $entry
+	 *
+	 * @return array
+	 */
+	public function gf_attach_pdf_to_email( $email, $message_format, $notification, $entry ) {
+		if ( $entry['form_id'] != $this->form_id ) return $notification;
+		
+		if ( ! is_array($email['attachments']) ) $email['attachments'] = array();
+		
+		global $KB_Quiz_PDF;
+		
+		// Get the filename
+		$filename = $KB_Quiz_PDF->get_pdf_filename( $entry );
+		
+		// Get the PDF by URL
+		$pdf_url = $this->get_pdf_url( $entry );
+		
+		// Download the PDF to a file in uploads/quiz-tmp/
+		$path = $this->download_file_as_path( $pdf_url, $filename, $entry['form_id'] );
+		
+		// Remember the filename to clean up afterwards
+		$this->temp_pdf_path = $path;
+		
+		// Attaches the temporary file by full path
+		$email['attachments'][] = $path;
+		
+		GFCommon::log_debug( __METHOD__ . '(): tmp file of quiz pdf added to attachments list: ' . $path);
+		
+		return $email;
+	}
+	
+	/**
+	 * Deletes temporary pdf after entry notifications are sent
+	 *
+	 * @param $entry
+	 * @param $form
+	 *
+	 * @return void
+	 */
+	public function gf_clean_up_pdf( $entry, $form ) {
+		if ( $this->temp_pdf_path ) {
+			unlink( $this->temp_pdf_path);
+		}
 	}
 	
 	/**
@@ -335,6 +441,24 @@ class KB_Quiz {
 		$entries = GFAPI::get_entries( $this->form_id, $search );
 		
 		return $entries ? $entries[0] : false;
+	}
+	
+	/**
+	 * Get URL to the PDF
+	 * https://karenbenoy.com/quiz/?kb_pdf=6410d8c42cab1
+	 *
+	 * @param $entry
+	 *
+	 * @return string
+	 */
+	public function get_pdf_url( $entry ) {
+		$code = $this->get_unique_key( $entry );
+		
+		$url = site_url( '/quiz/' );
+		
+		$url = add_query_arg(array( 'kb_pdf' => $code ), $url);
+		
+		return $url;
 	}
 	
 	/**
@@ -465,6 +589,20 @@ points starting from top going clockwise:
 		return $svg_content;
 	}
 	
+	// View past results by secret url
+	// @see https://karenbenoy.com/quiz/?kb_entry=6410d5ee5a372
+	public function display_previous_entry( $form ) {
+		if ( $form['id'] != $this->form_id ) return $form;
+		
+		$key = stripslashes($_GET['kb_entry']);
+		if ( empty($key) ) return $form;
+		
+		$entry = $this->get_entry_from_key( $key );
+		if ( ! $entry ) return $form;
+		
+		return $this->maybe_replace_form_with_confirmation( $form, $entry );
+	}
+	
 	// For testing, allow viewing the results of a previous entry.
 	// @see https://karenbenoy.com/quiz/?test_previous_entry_confirmation=135
 	public function test_previous_entry_confirmation( $form ) {
@@ -479,6 +617,11 @@ points starting from top going clockwise:
 			wp_die( __FUNCTION__ . ' is only available to admins.' );
 		}
 		
+		return $this->maybe_replace_form_with_confirmation( $form, $entry );
+	}
+	
+	// Replaces the form with confirmation using a hack that replaces the "form cannot be loaded" error message
+	public function maybe_replace_form_with_confirmation( $form, $entry ) {
 		// @see handle_submission()
 		$confirmation = GFFormDisplay::handle_confirmation( $form, $entry );
 		
@@ -488,7 +631,7 @@ points starting from top going clockwise:
 			// We capture the error handler to display a confirmation instead.
 			$this->confirmation = $confirmation;
 			add_filter( 'gform_form_not_found_message', array($this, '_replace_with_confirmation'), 5 );
-			$form = false;
+			return false;
 		}
 		
 		return $form;

@@ -68,6 +68,17 @@ pagebreak {
 	height: 100%;
 }
 
+a.button {
+	display: inline-block;
+	padding: 12px 24px;
+	border-radius: 5px;
+	letter-spacing: 0.4px;
+	text-decoration: none;
+	background-color: #d49e3e;
+	border: none;
+	color: #fff;
+}
+
 /*
 
 reusable
@@ -114,17 +125,18 @@ reusable
 }
 
 .copyright {
-	margin-bottom: 22px;
+	margin-bottom: 10px;
 	z-index: 3;
+	font-size: 14px;
+	line-height: 1.2;
 }
 
 .copyright.light {
 	color: #fff;
 }
 
-.raised.copyright,
 .raised.logo {
-	bottom: 50px;
+	bottom: 30px;
 }
 
 /*
@@ -206,4 +218,10 @@ next step
 	background-size: 105%;
 
 	background-image-size: 4;
+}
+
+
+img.size-full {
+	max-width: 80%;
+	height: auto;
 }

@@ -12,3 +12,8 @@
 .next-steps-container h2{
 	color:white;
 }
+
+.next-steps-container .quiz-results-section {
+	max-width: 1020px;
+	margin: 0 auto;
+}

@@ -107,7 +107,12 @@ class KB_Quiz_PDF {
 		
 		// mPDF settings
 		$this->document_title = wp_strip_all_tags( $this->title );
-		$this->filename = esc_attr(wp_strip_all_tags( $this->first_name . ' ' . $this->last_name . ' - ' . $this->title ) . '.pdf');
+		$this->filename = $this->get_pdf_filename( $this->entry );
+		
+		// Disable image srcset which breaks mpdf
+		add_filter( 'max_srcset_image_width', '__return_false' );
+		add_filter( 'wp_calculate_image_srcset', '__return_false' );
+		add_filter( 'intermediate_image_sizes_advanced', '__return_false' );
 		
 		// Set document title
 		$this->pdf->SetTitle( $this->document_title );
@@ -136,6 +141,18 @@ class KB_Quiz_PDF {
 		exit;
 	}
 	
+	public function get_pdf_filename( $entry ) {
+		$first_name = $this->get_entry_value( 'first_name', $entry );
+		$last_name = $this->get_entry_value( 'last_name', $entry );
+		$title = $this->get_pdf_setting( 'title' );
+		
+		$filename = wp_strip_all_tags( $first_name . ' ' . $last_name . ' - ' . $title );
+		$filename = preg_replace('/[^a-zA-Z0-9\-\_ ]+/', '', $filename);
+		$filename .= '.pdf';
+		
+		return $filename;
+	}
+	
 	public function get_pdf_setting( $name ) {
 		return get_field( "pdf_content_{$name}", 'kb_quiz' );
 	}
@@ -147,10 +164,12 @@ class KB_Quiz_PDF {
 	 *
 	 * @return mixed
 	 */
-	public function get_entry_value( $key ) {
+	public function get_entry_value( $key, $entry = null ) {
 		global $KB_Quiz;
 		
-		return $KB_Quiz->get_entry_value( $this->entry, $key );
+		if ( $entry === null ) $entry = $this->entry;
+		
+		return $KB_Quiz->get_entry_value( $entry, $key );
 	}
 	
 	/**
@@ -360,7 +379,7 @@ class KB_Quiz_PDF {
 		ob_start();
 		?>
 <pagebreak page-selector="nextstep">
-	<div class="photo" style="background-image: url(https://karenbenoy.com/wp-content/themes/northstar-child/_includes/functions/quiz/assets/kbrody-min.jpg);">
+	<div class="photo" style="background-image: url(https://karenbenoy.com/wp-content/themes/northstar-child/_includes/functions/quiz/assets/karen-brody-portrait.jpg);">
 	</div>
 	
 	<div class="page page-next-step footer-sloped">
