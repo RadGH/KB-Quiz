@@ -490,7 +490,8 @@ class KB_Quiz {
 	public function generate_svg( $scores ) {
 		// /northstar-child/_static/images/radar-chart-clean.svg
 		$theme_path = get_stylesheet_directory();
-		$svg_content = file_get_contents( $theme_path . '/_static/images/radar-simple.svg' ); // pdf safe version
+		// $svg_content = file_get_contents( $theme_path . '/_static/images/radar-simple.svg' ); // pdf safe version
+		$svg_content = file_get_contents( $theme_path . '/_static/images/radar-simple-text.svg' ); // pdf safe version
 		
 		// $size = array( 792, 612 );
 		
@@ -562,6 +563,10 @@ points starting from top going clockwise:
 		foreach( $coords as $i => &$c ) {
 			$percentage = $scores[ $i ];
 			
+			// x1/y1 = Center of the circle
+			// x2/y2 = Position at 100%
+			// x3/y3 = Target coordinates based on the percentage
+			
 			// point at 100% score
 			$x2 = $c[0];
 			$y2 = $c[1];
@@ -571,6 +576,7 @@ points starting from top going clockwise:
 			$y3 = $y1 + ( $percentage * ( $y2 - $y1 ) );
 			
 			$replacements[ "$x2, $y2" ] = "$x3, $y3";
+			$replacements[ "cx=\"$x2\" cy=\"$y2\"" ] = "cx=\"$x3\" cy=\"$y3\"";
 		}
 		
 		// replace old coordinates with newly calculated ones
@@ -579,6 +585,21 @@ points starting from top going clockwise:
 		// remove empty space and linebreaks to prevent wpautop issues
 		$svg_content = trim(preg_replace('/\s+/', ' ', $svg_content));
 		
+		// Replace scores
+		$score_numbers = array(
+			'[score_transformation]' => $this->get_percent( $scores[0] ),
+			'[score_confidence]'     => $this->get_percent( $scores[1] ),
+			'[score_risk]'           => $this->get_percent( $scores[2] ),
+			'[score_tools]'          => $this->get_percent( $scores[3] ),
+			'[score_efficiency]'     => $this->get_percent( $scores[4] ),
+			'[score_values]'         => $this->get_percent( $scores[5] ),
+			'[score_dots]'           => $this->get_percent( $scores[6] ),
+			'[score_not_said]'       => $this->get_percent( $scores[7] ),
+			'[score_present]'        => $this->get_percent( $scores[8] ),
+			'[score_potential]'      => $this->get_percent( $scores[9] ),
+		);
+
+		$svg_content = str_replace( array_keys($score_numbers), array_values($score_numbers), $svg_content );
 		
 		// Customize colors by URL
 		// <polygon
@@ -587,6 +608,10 @@ points starting from top going clockwise:
 		
 		// returns a string <svg>...</svg>
 		return $svg_content;
+	}
+	
+	public function get_percent( $float ) {
+		return round($float * 100) . '%';
 	}
 	
 	// View past results by secret url
